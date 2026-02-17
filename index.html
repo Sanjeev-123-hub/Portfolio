@@ -1197,7 +1197,7 @@
         <p>I'm always open to discussing new projects, creative ideas, or opportunities to be part of your vision.</p>
         
         <div class="contact-form-container">
-            <div class="contact-form">
+            <form id="contactForm" class="contact-form">
                 <div class="form-group">
                     <input type="text" id="name" placeholder="Your Name" required>
                 </div>
@@ -1214,7 +1214,7 @@
                     <span>Send Message</span>
                     <span class="btn-icon">✉️</span>
                 </button>
-            </div>
+            </form>
         </div>
 
         <div class="social-links">
@@ -1233,31 +1233,53 @@
 
     <!-- Firebase Configuration -->
     <script type="module">
-        // Import the functions you need from the SDKs you need
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
-        import { getDatabase, ref, push, set } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-database.js";
-        
-        // Your web app's Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyAtywSFEyIW45zC6AK0_Th4MqgbBOJ8RSE",
-            authDomain: "my-portfolio-ad275.firebaseapp.com",
-            databaseURL: "https://my-portfolio-ad275-default-rtdb.firebaseio.com",
-            projectId: "my-portfolio-ad275",
-            storageBucket: "my-portfolio-ad275.firebasestorage.app",
-            messagingSenderId: "99351963748",
-            appId: "1:99351963748:web:fe2a9bda213c2703905771"
-        };
-        
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const database = getDatabase(app);
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+import { getDatabase, ref, set, child } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-database.js";
 
-        // Make database available globally
-        window.firebaseDB = database;
-        window.firebaseRef = ref;
-        window.firebasePush = push;
-        window.firebaseSet = set;
-    </script>
+// Firebase config
+const firebaseConfig = {
+  apiKey: "AIzaSyAtywSFEyIW45zC6AK0_Th4MqgbBOJ8RSE",
+  authDomain: "my-portfolio-ad275.firebaseapp.com",
+  databaseURL: "https://my-portfolio-ad275-default-rtdb.firebaseio.com",
+  projectId: "my-portfolio-ad275",
+  storageBucket: "my-portfolio-ad275.firebasestorage.app",
+  messagingSenderId: "99351963748",
+  appId: "1:99351963748:web:fe2a9bda213c2703905771"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// Get form
+const form = document.getElementById("contactForm");
+
+// Handle submit
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const formData = {
+    name: form.name.value,
+    email: form.email.value,
+    subject: form.subject.value,
+    message: form.message.value,
+    timestamp: new Date().toISOString()
+  };
+
+  try {
+    const newMessageRef = child(ref(db), "messages/" + Date.now());
+    await set(newMessageRef, formData);
+
+    alert("Message sent successfully 🚀");
+    form.reset();
+
+  } catch (err) {
+    console.error(err);
+    alert("Something went wrong ❌");
+  }
+});
+</script>
+
 
     <script>
         // Mouse Tracker Effect
