@@ -785,6 +785,16 @@
             transform: translateY(-2px);
         }
 
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .submit-btn:disabled:hover {
+            transform: none;
+            box-shadow: none;
+        }
+
         .btn-icon {
             font-size: 2.2rem;
             animation: bounce 2s infinite;
@@ -1187,7 +1197,7 @@
         <p>I'm always open to discussing new projects, creative ideas, or opportunities to be part of your vision.</p>
         
         <div class="contact-form-container">
-            <form id="contactForm" class="contact-form">
+            <div class="contact-form">
                 <div class="form-group">
                     <input type="text" id="name" placeholder="Your Name" required>
                 </div>
@@ -1204,7 +1214,7 @@
                     <span>Send Message</span>
                     <span class="btn-icon">✉️</span>
                 </button>
-            </form>
+            </div>
         </div>
 
         <div class="social-links">
@@ -1220,6 +1230,34 @@
     </footer>
      <div class="cursor-dot"></div>
      <div class="cursor-ring"></div>
+
+    <!-- Firebase Configuration -->
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+        import { getDatabase, ref, push, set } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-database.js";
+        
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAtywSFEyIW45zC6AK0_Th4MqgbBOJ8RSE",
+            authDomain: "my-portfolio-ad275.firebaseapp.com",
+            databaseURL: "https://my-portfolio-ad275-default-rtdb.firebaseio.com",
+            projectId: "my-portfolio-ad275",
+            storageBucket: "my-portfolio-ad275.firebasestorage.app",
+            messagingSenderId: "99351963748",
+            appId: "1:99351963748:web:fe2a9bda213c2703905771"
+        };
+        
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+
+        // Make database available globally
+        window.firebaseDB = database;
+        window.firebaseRef = ref;
+        window.firebasePush = push;
+        window.firebaseSet = set;
+    </script>
 
     <script>
         // Mouse Tracker Effect
@@ -1266,74 +1304,73 @@
             });
         });
 
-        // Form submission handler
+        // Form submission handler with Firebase integration
         const submitBtn = document.querySelector('.submit-btn');
         const contactForm = document.querySelector('.contact-form');
         
-        submitBtn.addEventListener('click', (e) => {
+        submitBtn.addEventListener('click', async (e) => {
             e.preventDefault();
-            const name = document.getElementById('name').value;
-            const email = document.getElementById('email').value;
-            const subject = document.getElementById('subject').value;
-            const message = document.getElementById('message').value;
             
-            if (name && email && subject && message) {
-                alert('Thank you for your message! I will get back to you soon.');
+            const name = document.getElementById('name').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const subject = document.getElementById('subject').value.trim();
+            const message = document.getElementById('message').value.trim();
+            
+            // Validate form fields
+            if (!name || !email || !subject || !message) {
+                alert('Please fill in all fields.');
+                return;
+            }
+
+            // Basic email validation
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                alert('Please enter a valid email address.');
+                return;
+            }
+
+            // Disable button during submission
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span>Sending...</span><span class="btn-icon">⏳</span>';
+            
+            try {
+                // Create a reference to the messages collection
+                const messagesRef = window.firebaseRef(window.firebaseDB, 'messages');
+                
+                // Create a new message entry
+                const newMessageRef = window.firebasePush(messagesRef);
+                
+                // Prepare message data
+                const messageData = {
+                    name: name,
+                    email: email,
+                    subject: subject,
+                    message: message,
+                    timestamp: new Date().toISOString(),
+                    date: new Date().toLocaleString()
+                };
+                
+                // Save to Firebase
+                await window.firebaseSet(newMessageRef, messageData);
+                
+                // Success message
+                alert('Thank you for your message! I will get back to you soon. 🎉');
+                
                 // Clear form
                 document.getElementById('name').value = '';
                 document.getElementById('email').value = '';
                 document.getElementById('subject').value = '';
                 document.getElementById('message').value = '';
-            } else {
-                alert('Please fill in all fields.');
+                
+            } catch (error) {
+                console.error('Error submitting form:', error);
+                alert('Sorry, there was an error sending your message. Please try again later.');
+            } finally {
+                // Re-enable button
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<span>Send Message</span><span class="btn-icon">✉️</span>';
             }
         });
-
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
-import { getDatabase, ref, set, child } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-database.js";
-
-// Firebase config
-const firebaseConfig = {
-  apiKey: "AIzaSyAtywSFEyIW45zC6AK0_Th4MqgbBOJ8RSE",
-  authDomain: "my-portfolio-ad275.firebaseapp.com",
-  databaseURL: "https://my-portfolio-ad275-default-rtdb.firebaseio.com",
-  projectId: "my-portfolio-ad275",
-  storageBucket: "my-portfolio-ad275.firebasestorage.app",
-  messagingSenderId: "99351963748",
-  appId: "1:99351963748:web:fe2a9bda213c2703905771"
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-
-// Get form
-const form = document.getElementById("contactForm");
-
-// Handle submit
-form.addEventListener("submit", async (e) => {
-  e.preventDefault();
-
-  const formData = {
-    name: form.name.value,
-    email: form.email.value,
-    subject: form.subject.value,
-    message: form.message.value,
-    timestamp: new Date().toISOString()
-  };
-
-  try {
-    const newMessageRef = child(ref(db), "messages/" + Date.now());
-    await set(newMessageRef, formData);
-
-    alert("Message sent successfully 🚀");
-    form.reset();
-
-  } catch (err) {
-    console.error(err);
-    alert("Something went wrong ❌");
-  }
-});
     </script>
 </body>
 </html>
